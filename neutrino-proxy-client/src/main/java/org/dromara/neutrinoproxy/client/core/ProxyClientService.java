@@ -43,9 +43,11 @@ public class ProxyClientService {
 
 	@Init
 	public void init() {
+        // 重连定时任务
 		this.reconnectExecutor.scheduleWithFixedDelay(this::reconnect, 10, proxyConfig.getTunnel().getReconnection().getIntervalSeconds(), TimeUnit.SECONDS);
 
 		try {
+            // 连接服务端
 			this.start();
 			UdpServerUtil.initCache(proxyConfig, udpServerBootstrap);
 		} catch (Exception e) {

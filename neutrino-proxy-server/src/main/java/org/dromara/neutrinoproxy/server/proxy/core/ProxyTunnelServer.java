@@ -53,6 +53,7 @@ public class ProxyTunnelServer implements EventListener<AppLoadEndEvent> {
 	 * 启动代理服务
 	 */
 	private void startProxyServer() {
+        // 启动代理服务、9000端口
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(serverBossGroup, serverWorkerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
 
@@ -70,6 +71,7 @@ public class ProxyTunnelServer implements EventListener<AppLoadEndEvent> {
 	}
 
 	private void startProxyServerForSSL() {
+        // 启动代理服务、9002端口
 		if (null == proxyConfig.getTunnel().getSslPort()) {
 			return;
 		}

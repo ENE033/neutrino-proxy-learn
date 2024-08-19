@@ -15,17 +15,11 @@ import org.dromara.neutrinoproxy.server.dal.entity.LicenseDO;
 import org.dromara.neutrinoproxy.server.dal.entity.PortMappingDO;
 import org.dromara.neutrinoproxy.server.dal.entity.PortPoolDO;
 import org.dromara.neutrinoproxy.server.dal.entity.UserDO;
-import org.dromara.neutrinoproxy.server.proxy.core.BytesMetricsHandler;
-import org.dromara.neutrinoproxy.server.proxy.core.TcpVisitorChannelHandler;
 import org.dromara.neutrinoproxy.server.proxy.domain.CmdChannelAttachInfo;
 import org.dromara.neutrinoproxy.server.proxy.domain.ProxyMapping;
 import org.dromara.neutrinoproxy.server.util.ProxyUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.solon.annotation.Db;
 import org.noear.solon.annotation.Component;
@@ -60,15 +54,17 @@ public class VisitorChannelService {
 
     /**
      * 初始化
+     * 这个方法在服务端9000启动的时候不会触发，而是在等待有客户端连接到来之后，才会去调用这个方法，每个连接到来都会调用一次
      * @param licenseId
      */
     public void initVisitorChannel(Integer licenseId, Channel cmdChannel) {
+        // 管理后台配置的端口映射列表
         List<PortMappingDO> portMappingList = portMappingMapper.findEnableListByLicenseId(licenseId);
         // 没有端口映射仍然保持连接
         ProxyUtil.initProxyInfo(licenseId, ProxyMapping.buildList(portMappingList));
-
+        // 将指令通道加入到缓存中，用于后面获取
         ProxyUtil.addCmdChannel(licenseId, cmdChannel, portMappingList.stream().map(PortMappingDO::getServerPort).collect(Collectors.toSet()));
-
+        // 绑定端口，暴露端口给visitor访问
         startUserPortServer(ProxyUtil.getAttachInfo(cmdChannel), portMappingList);
     }
 
@@ -166,6 +162,7 @@ public class VisitorChannelService {
             return;
         }
         Channel cmdChannel = ProxyUtil.getCmdChannelByLicenseId(portMappingDO.getLicenseId());
+        // 这种情况是因为客户端不在线，所以没有这个连接
         if (null == cmdChannel) {
             // 如果不存在有效的cmdChannel，则无需更新VisitorChannel
             return;
@@ -200,6 +197,7 @@ public class VisitorChannelService {
         if (null == portMappingDO) {
             return;
         }
+        // 跟客户端的连接不必断开，因为可能还会有其他连接，或者端口、端口映射重新启用
         Channel cmdChannel = ProxyUtil.getCmdChannelByLicenseId(portMappingDO.getLicenseId());
         if (null == cmdChannel) {
             // 如果不存在有效的cmdChannel，则无需更新VisitorChannel
@@ -217,6 +215,11 @@ public class VisitorChannelService {
         ProxyUtil.removeProxyInfo(portMappingDO.getServerPort());
     }
 
+    /**
+     * 绑定端口，暴露端口给visitor访问
+     * @param cmdChannelAttachInfo
+     * @param portMappingList
+     */
     private void startUserPortServer(CmdChannelAttachInfo cmdChannelAttachInfo, List<PortMappingDO> portMappingList) {
         if (CollectionUtil.isEmpty(portMappingList)) {
             return;

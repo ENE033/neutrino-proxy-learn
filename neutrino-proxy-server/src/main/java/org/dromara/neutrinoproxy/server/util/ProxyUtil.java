@@ -82,8 +82,7 @@ public class ProxyUtil {
 	public static void addProxyInfo(Integer licenseId, List<ProxyMapping> proxyMappingList) {
 		if (!CollectionUtil.isEmpty(proxyMappingList)) {
 			for (ProxyMapping proxyMapping : proxyMappingList) {
-				licenseToServerPortMap.get(licenseId).add(proxyMapping.getServerPort());
-				proxyInfoMap.put(proxyMapping.getServerPort(), proxyMapping.getLanInfo());
+                addProxyInfo(licenseId,proxyMapping);
 			}
 		}
 	}
@@ -125,12 +124,16 @@ public class ProxyUtil {
 	 * @param serverPorts 服务端端口集合
 	 */
 	public static void addCmdChannel(Integer licenseId, Channel cmdChannel, Set<Integer> serverPorts) {
+        // 如果开启了多个端口映射同一个客户端，那么与该客户端的所有端口的流量都只会走这一个指令通道，而不是创建多个指令通道
 		if (!CollectionUtil.isEmpty(serverPorts)) {
 			for (int port : serverPorts) {
 				serverPortToCmdChannelMap.put(port, cmdChannel);
 			}
 		}
+        // 获取channel的附加信息
 		CmdChannelAttachInfo cmdChannelAttachInfo = getAttachInfo(cmdChannel);
+        // 如果获取不到，那么则关联附加信息
+        // ip、licenseId、serverPorts、visitorChannelMap
 		if (null == cmdChannelAttachInfo) {
 			cmdChannelAttachInfo = new CmdChannelAttachInfo()
 					.setIp(((InetSocketAddress)cmdChannel.remoteAddress()).getAddress().getHostAddress())

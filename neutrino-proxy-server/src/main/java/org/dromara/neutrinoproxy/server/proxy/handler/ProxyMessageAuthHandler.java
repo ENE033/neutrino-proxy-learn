@@ -146,7 +146,9 @@ public class ProxyMessageAuthHandler implements ProxyMessageHandler {
 					.setCreateTime(now));
 			return;
 		}
-		Channel cmdChannel = ProxyUtil.getCmdChannelByLicenseId(licenseDO.getId());
+        // 第一次是null，然后会把这个channel放到licenseIdToClientIdMap中；
+        // 第二次是才能从licenseIdToClientIdMap中获取到cmdChannel
+        Channel cmdChannel = ProxyUtil.getCmdChannelByLicenseId(licenseDO.getId());
 		if (null != cmdChannel) {
 			String _clientId = ProxyUtil.getClientIdByLicenseId(licenseDO.getId());
 			if (!clientId.equals(_clientId)) {

@@ -144,6 +144,12 @@ public class PortMappingService implements LifecycleBean {
         return PageInfo.of(respList, page.getTotal(), pageQuery.getCurrent(), pageQuery.getSize());
     }
 
+    /**
+     * 创建端口映射
+     *
+     * @param req
+     * @return
+     */
     public PortMappingCreateRes create(PortMappingCreateReq req) {
         LicenseDO licenseDO = licenseMapper.findById(req.getLicenseId());
         ParamCheckUtil.checkNotNull(licenseDO, ExceptionConstant.LICENSE_NOT_EXIST);

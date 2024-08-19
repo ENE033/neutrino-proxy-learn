@@ -41,11 +41,11 @@ public class ProxyConfiguration implements LifecycleBean {
 
     @Override
     public void start() throws Throwable {
+        // 创建dispatcher
         List<ProxyMessageHandler> list = Solon.context().getBeansOfType(ProxyMessageHandler.class);
         Dispatcher<ChannelHandlerContext, ProxyMessage> dispatcher = new DefaultDispatcher<>("MessageDispatcher", list,
             proxyMessage -> ProxyDataTypeEnum.of((int)proxyMessage.getType()) == null ?
                     null : ProxyDataTypeEnum.of((int)proxyMessage.getType()).getName());
-
         Solon.context().wrapAndPut(Dispatcher.class, dispatcher);
     }
 
@@ -61,6 +61,13 @@ public class ProxyConfiguration implements LifecycleBean {
         return new NioEventLoopGroup(proxyConfig.getServer().getTcp().getWorkThreadCount());
     }
 
+    /**
+     * TCP访问服务启动器，用于visitor访问服务
+     * @param tcpServerBossGroup
+     * @param tcpServerWorkerGroup
+     * @param proxyConfig
+     * @return
+     */
     @Bean("tcpServerBootstrap")
     public ServerBootstrap tcpServerBootstrap(@Inject("tcpServerBossGroup") NioEventLoopGroup tcpServerBossGroup,
                                               @Inject("tcpServerWorkerGroup") NioEventLoopGroup tcpServerWorkerGroup,

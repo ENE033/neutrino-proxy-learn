@@ -11,6 +11,7 @@ import org.dromara.neutrinoproxy.core.Constants;
 import org.dromara.neutrinoproxy.core.ProxyMessage;
 import org.dromara.neutrinoproxy.server.constant.NetworkProtocolEnum;
 import org.dromara.neutrinoproxy.server.proxy.domain.VisitorChannelAttachInfo;
+import org.dromara.neutrinoproxy.server.proxy.handler.ProxyMessageConnectHandler;
 import org.dromara.neutrinoproxy.server.service.FlowReportService;
 import org.dromara.neutrinoproxy.server.util.ProxyUtil;
 import org.noear.solon.Solon;
@@ -32,10 +33,20 @@ public class TcpVisitorChannelHandler extends SimpleChannelInboundHandler<ByteBu
         log.error("VisitorChannel error", cause);
     }
 
+    /**
+     * 收到visitor端数据，将数据转发给代理客户端
+     * @param ctx           the {@link ChannelHandlerContext} which this {@link SimpleChannelInboundHandler}
+     *                      belongs to
+     * @param buf           the message to handle
+     * @throws Exception
+     */
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
         // 通知代理客户端
         Channel visitorChannel = ctx.channel();
+        /**
+         * @see ProxyMessageConnectHandler#handle(ChannelHandlerContext, ProxyMessage)
+         */
         Channel proxyChannel = visitorChannel.attr(Constants.NEXT_CHANNEL).get();
 
         if (null == proxyChannel) {
@@ -58,6 +69,11 @@ public class TcpVisitorChannelHandler extends SimpleChannelInboundHandler<ByteBu
         Solon.context().getBean(FlowReportService.class).addWriteByte(visitorChannelAttachInfo.getLicenseId(), bytes.length);
     }
 
+    /**
+     * 向代理客户端发送CONNECT消息
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Channel visitorChannel = ctx.channel();

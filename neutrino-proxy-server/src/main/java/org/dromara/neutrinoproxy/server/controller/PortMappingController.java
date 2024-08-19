@@ -34,6 +34,12 @@ public class PortMappingController {
 		return portMappingService.page(pageQuery, req);
 	}
 
+    /**
+     * 创建端口映射
+     *
+     * @param req
+     * @return
+     */
     @Post
     @Mapping("/create")
     public PortMappingCreateRes create(PortMappingCreateReq req) {

@@ -35,6 +35,9 @@ import java.util.Set;
  */
 @Accessors(chain = true)
 @Data
+/**
+ * ip、licenseId、serverPorts、visitorChannelMap
+ */
 public class CmdChannelAttachInfo {
 	/**
 	 * 用户通道映射
